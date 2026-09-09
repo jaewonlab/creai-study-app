@@ -7,16 +7,20 @@ import { signIn } from "next-auth/react";
 export function LoginForm() {
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function start() {
-    if (!agreed) return;
+  async function start(destination: "/" | "/admin") {
+    if (!agreed || busy) return;
     setBusy(true);
+    setError(null);
     try {
-      await fetch("/api/consent", { method: "POST" });
+      const response = await fetch("/api/consent", { method: "POST", signal: AbortSignal.timeout(10000) });
+      if (!response.ok) throw new Error("consent failed");
+      await signIn("google", { redirectTo: destination }, { prompt: "select_account" });
     } catch {
-      // 쿠키를 못 심어도 로그인 자체는 진행한다. 동의는 그 뒤에 다시 묻는다.
+      setError("로그인을 시작하지 못했습니다. 연결을 확인하고 다시 눌러 주세요.");
+      setBusy(false);
     }
-    await signIn("google", { callbackUrl: "/" });
   }
 
   return (
@@ -33,9 +37,14 @@ export function LoginForm() {
         </span>
       </label>
 
-      <button className="btn btn-primary w-full" disabled={!agreed || busy} onClick={start}>
+      <button className="btn btn-primary w-full" disabled={!agreed || busy} onClick={() => start("/")}>
         {busy ? "이동 중" : "구글로 시작하기"}
       </button>
+      <button className="btn w-full" disabled={!agreed || busy} onClick={() => start("/admin")}>
+        운영진 로그인
+      </button>
+      <p className="text-[13px] text-ink-2">운영진은 등록된 Google 계정으로 로그인해 주세요. 운영진 권한이 있어야 관리 화면에 들어갈 수 있습니다.</p>
+      {error ? <p role="alert" className="text-[14px] text-[color:var(--warn)]">{error}</p> : null}
 
       <ul className="flex flex-col gap-1.5 text-[12px] leading-relaxed text-ink-3">
         <li>무엇을 저장하나. 세션 녹음의 전사본과 요약, 인클래스 제출물, 출석</li>

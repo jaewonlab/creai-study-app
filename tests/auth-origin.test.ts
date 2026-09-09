@@ -41,6 +41,12 @@ test("canonical login does not loop", async () => {
   assert.equal(response.headers.get("location"), null);
 });
 
+test("an old server-error URL recovers to the public login without reflecting query values", async () => {
+  const response = await load(production)(`${production.NEXTAUTH_URL}/api/auth/error?error=Configuration&callbackUrl=https://untrusted.example`);
+  assert.equal(response.status, 307);
+  assert.equal(response.headers.get("location"), `${production.NEXTAUTH_URL}/login?error=AuthenticationFailed`);
+});
+
 test("local development and preview are not redirected to production", async () => {
   for (const VERCEL_ENV of ["development", "preview"]) {
     const response = await load({ ...production, VERCEL_ENV })("http://localhost:3000/login");

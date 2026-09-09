@@ -21,6 +21,12 @@ export async function middleware(req: NextRequest) {
   }
 
   const { pathname } = req.nextUrl;
+  // Recover even when an old bookmarked auth error URL is opened directly.
+  if (pathname === "/api/auth/error") {
+    const login = new URL("/login", req.url);
+    login.searchParams.set("error", "AuthenticationFailed");
+    return NextResponse.redirect(login);
+  }
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return NextResponse.next();
 
   const token = await getToken({

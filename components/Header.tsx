@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getRunningSession } from "@/lib/session-state";
+import { LogoutButton } from "./LogoutButton";
 
 /** 로고는 이미지가 아니라 글자다. 원본 사이트도 텍스트로 찍는다. */
 export function Logo({ sub }: { sub?: string }) {
@@ -27,13 +28,13 @@ export async function Header({ right }: { right?: React.ReactNode } = {}) {
 
   return (
     <header className="border-b border-line bg-surface">
-      <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-5">
+      <div className="mx-auto flex min-h-14 max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-3">
         <Link href="/">
           <Logo sub="AI 스터디 0기" />
         </Link>
-        <div className="flex items-center gap-3 text-[13px] text-ink-2">
+        <div className="flex flex-wrap items-center gap-3 text-[13px] text-ink-2">
           {name ? <Link href="/mine" className="hover:text-ink">내 제출물</Link> : null}
-          {isAdmin ? <Link href="/admin" className="hover:text-ink">회차 관리</Link> : null}
+          {isAdmin ? <Link href="/admin" className="btn btn-primary">운영진 관리</Link> : null}
           {showDeck ? (
             <Link href="/deck" className="hover:text-ink">
               장표
@@ -54,6 +55,7 @@ export async function Header({ right }: { right?: React.ReactNode } = {}) {
             </span>
           ) : null}
           {right}
+          {session?.user ? <LogoutButton /> : null}
         </div>
       </div>
     </header>

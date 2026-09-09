@@ -2,13 +2,14 @@ import { auth } from "@/lib/auth";
 import Link from "next/link";
 import { LoginForm } from "./LoginForm";
 import { Logo } from "@/components/Header";
+import { LogoutButton } from "@/components/LogoutButton";
 
 export const dynamic = "force-dynamic";
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ consent?: string }>;
+  searchParams: Promise<{ consent?: string; error?: string }>;
 }) {
   const sp = await searchParams;
   const session = await auth();
@@ -28,6 +29,12 @@ export default async function LoginPage({
           <Link href="/" className="btn btn-primary w-full">
             들어가기
           </Link>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            {session.user.roles?.includes("admin") ? (
+              <Link href="/admin" className="btn">운영진 관리</Link>
+            ) : <p className="text-[13px] text-ink-2">현재 계정은 참가자 계정입니다.</p>}
+            <LogoutButton />
+          </div>
         </div>
       </main>
     );
@@ -44,6 +51,13 @@ export default async function LoginPage({
         {sp.consent ? (
           <p className="mb-4 rounded-lg bg-accent-soft px-3 py-2 text-[13px] text-accent-strong">
             동의가 저장되지 않았습니다. 아래에서 다시 확인해 주세요.
+          </p>
+        ) : null}
+
+        {sp.error ? (
+          <p role="alert" className="mb-4 rounded-lg bg-accent-soft px-3 py-2 text-[14px] text-accent-strong">
+            로그인을 완료하지 못했습니다. 이전 배포 주소에서 시작했거나 인증 시간이 만료됐을 수 있습니다.
+            지금 열린 로그인 화면에서 다시 시작해 주세요. 반복되면 운영진에게 알려 주세요.
           </p>
         ) : null}
 
