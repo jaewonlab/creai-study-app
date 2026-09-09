@@ -7,6 +7,19 @@ import { getToken } from "next-auth/jwt";
 const PUBLIC = ["/login", "/api/auth", "/api/consent"];
 
 export async function middleware(req: NextRequest) {
+  // Auth.js sends OAuth callbacks to AUTH_URL/NEXTAUTH_URL. Start on that
+  // same origin so the browser can return its host-scoped PKCE/consent cookies.
+  const authUrl = process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
+  if (process.env.VERCEL_ENV === "production" && authUrl) {
+    const canonical = new URL(authUrl);
+    if (canonical.protocol === "https:" && req.nextUrl.origin !== canonical.origin) {
+      const destination = req.nextUrl.clone();
+      destination.protocol = canonical.protocol;
+      destination.host = canonical.host;
+      return NextResponse.redirect(destination);
+    }
+  }
+
   const { pathname } = req.nextUrl;
   if (PUBLIC.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return NextResponse.next();
 
